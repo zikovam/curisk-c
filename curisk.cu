@@ -37,7 +37,7 @@ void generate_vector_sample(sampling_cofiguration_t& conf, sampling_result_t& re
 {
     int start_time_point = clock();
 
-    /* Скопируем некоторые поля из conf в константную память. */
+    /* РЎРєРѕРїРёСЂСѓРµРј РЅРµРєРѕС‚РѕСЂС‹Рµ РїРѕР»СЏ РёР· conf РІ РєРѕРЅСЃС‚Р°РЅС‚РЅСѓСЋ РїР°РјСЏС‚СЊ. */
     conf.log() << "Preparing constant variables." << std::endl;
     cudaMemcpyToSymbol(c_dimension, &conf.dimension, sizeof(int)); check_error();
     cudaMemcpyToSymbol(c_sample_size, &conf.sample_size, sizeof(int)); check_error();
@@ -45,13 +45,13 @@ void generate_vector_sample(sampling_cofiguration_t& conf, sampling_result_t& re
     cudaMemcpyToSymbol(c_vector_bounds, conf.vector_bounds, conf.dimension*sizeof(bound_t)); check_error();
     cudaMemcpyToSymbol(c_vector_ordinal, conf.vector_ordinal, conf.dimension*sizeof(ordinal_t)); check_error();
 
-    /* Выделим память для выборки. */
+    /* Р’С‹РґРµР»РёРј РїР°РјСЏС‚СЊ РґР»СЏ РІС‹Р±РѕСЂРєРё. */
     conf.log() << "Allocate memory for vector sample." << std::endl;
     float *dh_vector_sample;
     cudaMalloc(&dh_vector_sample, conf.sample_size*conf.dimension*sizeof(float)); check_error();
     cudaMemcpyToSymbol(d_vector_sample, &dh_vector_sample, sizeof(dh_vector_sample)); check_error();
 
-    /* Выделим память для выборки раунда. */
+    /* Р’С‹РґРµР»РёРј РїР°РјСЏС‚СЊ РґР»СЏ РІС‹Р±РѕСЂРєРё СЂР°СѓРЅРґР°. */
     conf.log() << "Allocate memory for round vector sample." << std::endl;
     int blocks_per_round = conf.grid_dimension.x;
     int vectors_per_block = conf.block_dimension.x;
@@ -62,7 +62,7 @@ void generate_vector_sample(sampling_cofiguration_t& conf, sampling_result_t& re
     cudaMalloc(&dh_round_vector_sample, round_sample_size*conf.dimension*sizeof(float)); check_error();
     cudaMemcpyToSymbol(d_round_vector_sample, &dh_round_vector_sample, sizeof(dh_round_vector_sample)); check_error();
 
-    /* Настроим генератор случайных чисел. */
+    /* РќР°СЃС‚СЂРѕРёРј РіРµРЅРµСЂР°С‚РѕСЂ СЃР»СѓС‡Р°Р№РЅС‹С… С‡РёСЃРµР». */
     conf.log() << "Setup CUDA random numbers generator." << std::endl;
     curandState *dh_curand_states;
     cudaMalloc(&dh_curand_states, round_sample_size*sizeof(curandState)); check_error();
@@ -71,7 +71,7 @@ void generate_vector_sample(sampling_cofiguration_t& conf, sampling_result_t& re
     setup_gamma_generator<<<blocks_per_round, vectors_per_block>>>(clock()); check_error();
     cudaDeviceSynchronize(); check_error();
 
-    /* Число готовых элементов выборки. */
+    /* Р§РёСЃР»Рѕ РіРѕС‚РѕРІС‹С… СЌР»РµРјРµРЅС‚РѕРІ РІС‹Р±РѕСЂРєРё. */
     int vectors_ready = 0;
     cudaMemcpyToSymbol(d_vectors_ready, &vectors_ready, sizeof(vectors_ready)); check_error();
 
@@ -181,7 +181,7 @@ void setup_gamma_generator(long seed)
 }
 
 /*
- * Функция генерирует случайную величину с распределением Gamma(1,1).
+ * Р¤СѓРЅРєС†РёСЏ РіРµРЅРµСЂРёСЂСѓРµС‚ СЃР»СѓС‡Р°Р№РЅСѓСЋ РІРµР»РёС‡РёРЅСѓ СЃ СЂР°СЃРїСЂРµРґРµР»РµРЅРёРµРј Gamma(1,1).
  */
 __device__ __forceinline__
 float generate_gamma_1_1(curandState *state)
